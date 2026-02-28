@@ -3,14 +3,13 @@
 import Link from "next/link";
 import {
   motion,
-  useScroll,
-  useTransform,
   useMotionValue,
   useSpring,
   useMotionTemplate,
 } from "framer-motion";
 import { useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
+import StarryBackground from "@/components/StarryBackground";
 
 /* ─── Data ───────────────────────────────── */
 
@@ -240,8 +239,6 @@ const INITIAL_PROJECTS = 6;
 const LOAD_STEP = 3;
 
 export default function Home() {
-  const { scrollYProgress } = useScroll();
-  const glowY = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_PROJECTS);
 
   const showMore = () =>
@@ -250,11 +247,8 @@ export default function Home() {
 
   return (
     <>
-      {/* Background effects */}
-      <div className="bg-grid" />
-      <motion.div className="bg-glow bg-glow--1" style={{ y: glowY }} />
-      <div className="bg-glow bg-glow--2" />
-      <div className="bg-glow bg-glow--3" />
+      {/* Galaxy background */}
+      <StarryBackground />
 
       <Navbar />
 
