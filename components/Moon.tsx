@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 
@@ -19,6 +19,7 @@ const FRAGMENT_SHADER = `
   uniform sampler2D u_color;
   uniform sampler2D u_height;
   uniform float u_progress;
+  uniform float u_rotation;
   const float PI = 3.14159265359;
 
   void main() {
@@ -26,7 +27,7 @@ const FRAGMENT_SHADER = `
     float radius = dot(p, p);
     if (radius > 1.0) discard;
     vec3 normal = vec3(p, sqrt(max(0.0, 1.0 - radius)));
-    float rotation = -0.025 + u_progress * 0.035;
+    float rotation = -0.025 + u_progress * 0.035 + u_rotation;
     vec2 uv = vec2(0.5 + atan(normal.x, normal.z) / (2.0 * PI) + rotation,
                    0.5 + asin(normal.y) / PI);
     vec3 albedo = texture2D(u_color, uv).rgb;
@@ -52,7 +53,7 @@ const FRAGMENT_SHADER = `
   }
 `;
 
-type MoonRenderer = { draw: (progress: number) => void; dispose: () => void };
+type MoonRenderer = { draw: (progress: number, rotation: number) => void; dispose: () => void };
 
 function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
   const gl = canvas.getContext("webgl", {
@@ -69,7 +70,9 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
   let disposed = false;
   let loaded = 0;
   let lastProgress = 0;
+  let lastRotation = 0;
   let lastDrawn = -1;
+  let lastDrawnRotation = -1;
   let program: WebGLProgram | null = null;
   let buffer: WebGLBuffer | null = null;
 
@@ -106,13 +109,15 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
     const phase = gl.getUniformLocation(program, "u_progress");
+    const longitude = gl.getUniformLocation(program, "u_rotation");
 
-    function draw(progress: number) {
+    function draw(progress: number, rotation: number) {
       lastProgress = progress;
+      lastRotation = rotation;
       if (disposed || loaded !== 2 || !program || gl!.isContextLost()) return;
       const resolution = Math.min(1024, Math.max(128, Math.round(canvas.clientWidth * Math.min(window.devicePixelRatio || 1, 2))));
       const resized = canvas.width !== resolution || canvas.height !== resolution;
-      if (!resized && lastDrawn === progress) return;
+      if (!resized && lastDrawn === progress && lastDrawnRotation === rotation) return;
       if (resized) {
         canvas.width = resolution;
         canvas.height = resolution;
@@ -122,8 +127,10 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
       gl!.clearColor(0, 0, 0, 0);
       gl!.clear(gl!.COLOR_BUFFER_BIT);
       gl!.uniform1f(phase, progress);
+      gl!.uniform1f(longitude, rotation);
       gl!.drawArrays(gl!.TRIANGLES, 0, 6);
       lastDrawn = progress;
+      lastDrawnRotation = rotation;
       canvas.dataset.renderer = "webgl";
     }
 
@@ -147,7 +154,7 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
         gl.useProgram(program);
         gl.uniform1i(gl.getUniformLocation(program, unit === 0 ? "u_color" : "u_height"), unit);
         loaded += 1;
-        draw(lastProgress);
+        draw(lastProgress, lastRotation);
       };
       image.onerror = () => { canvas.dataset.renderer = "fallback"; };
       image.src = source;
@@ -173,34 +180,69 @@ export default function Moon() {
     let frame = 0;
     let start = 0;
     let distance = 220;
+    let visible = false;
+    let layoutDirty = true;
+    let progress = 0;
+    let rotation = 0;
+    let lastTime: number | null = null;
+    let lastPaint = -Infinity;
+    let reducedMotion = motionPreference.matches;
 
-    function update() {
+    function update(time: number) {
       frame = 0;
-      const raw = motionPreference.matches ? 1 : Math.max(0, Math.min(1, (window.scrollY - start) / distance));
-      const progress = raw * raw * (3 - 2 * raw);
-      // Both the chart and the target use the same 760-unit SVG coordinate space.
-      // The canvas has a 2.5% margin, so its final visible radius is exactly 43.
-      const finalScale = (86 / 760) / (0.46 * 0.975);
-      element!.style.left = `${50 + (510 / 760 * 100 - 50) * progress}%`;
-      element!.style.top = `${50 + (235 / 760 * 100 - 50) * progress}%`;
-      element!.style.transform = `translate(-50%, -50%) scale(${1 + (finalScale - 1) * progress})`;
-      element!.style.setProperty("--moon-progress", String(progress));
-      element!.dataset.progress = progress.toFixed(3);
-      atlas!.style.setProperty("--moon-progress", String(progress));
-      renderer?.draw(progress);
+      // A preference change can reach a queued frame before its change event.
+      if (reducedMotion !== motionPreference.matches) {
+        reducedMotion = motionPreference.matches;
+        layoutDirty = true;
+      }
+      const spinning = visible && !document.hidden && !reducedMotion;
+      // Rotate the mapped terrain once every 90 seconds; sunlight stays fixed.
+      if (spinning && lastTime !== null) rotation = (rotation + (time - lastTime) / 90_000) % 1;
+      lastTime = spinning ? time : null;
+      const changed = layoutDirty;
+      if (layoutDirty) {
+        layoutDirty = false;
+        const raw = reducedMotion ? 1 : Math.max(0, Math.min(1, (window.scrollY - start) / distance));
+        progress = raw * raw * (3 - 2 * raw);
+        // Both the chart and the target use the same 760-unit SVG coordinate space.
+        // The canvas has a 2.5% margin, so its final visible radius is exactly 43.
+        const finalScale = (86 / 760) / (0.46 * 0.975);
+        element!.style.left = `${50 + (510 / 760 * 100 - 50) * progress}%`;
+        element!.style.top = `${50 + (235 / 760 * 100 - 50) * progress}%`;
+        element!.style.transform = `translate(-50%, -50%) scale(${1 + (finalScale - 1) * progress})`;
+        element!.style.setProperty("--moon-progress", String(progress));
+        element!.dataset.progress = progress.toFixed(3);
+        atlas!.style.setProperty("--moon-progress", String(progress));
+      }
+      // Limit GPU work to 30fps while retaining immediate scroll updates.
+      if (changed || time - lastPaint >= 1000 / 30) {
+        renderer?.draw(progress, rotation);
+        element!.style.setProperty("--moon-texture-position", `${50 + rotation * 200}%`);
+        element!.dataset.rotation = rotation.toFixed(5);
+        lastPaint = time;
+      }
+      if (spinning) schedule();
     }
     function schedule() { if (!frame) frame = requestAnimationFrame(update); }
+    function invalidate() { layoutDirty = true; schedule(); }
+    function visibilityChanged() { lastTime = null; invalidate(); }
     function measure() {
       const bounds = atlas!.getBoundingClientRect();
       start = Math.max(0, bounds.top + window.scrollY - window.innerHeight * 0.55);
       distance = Math.max(165, Math.min(220, bounds.width * 0.27));
-      schedule();
+      invalidate();
     }
     function contextLost(event: Event) { event.preventDefault(); surface!.dataset.renderer = "fallback"; }
-    function contextRestored() { renderer?.dispose(); renderer = createRenderer(surface!); schedule(); }
+    function contextRestored() { renderer?.dispose(); renderer = createRenderer(surface!); invalidate(); }
     const observer = new ResizeObserver(measure);
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      visibilityChanged();
+    });
     observer.observe(atlas);
-    window.addEventListener("scroll", schedule, { passive: true });
+    visibilityObserver.observe(element);
+    document.addEventListener("visibilitychange", visibilityChanged);
+    window.addEventListener("scroll", invalidate, { passive: true });
     window.addEventListener("resize", measure, { passive: true });
     motionPreference.addEventListener("change", measure);
     surface.addEventListener("webglcontextlost", contextLost);
@@ -214,7 +256,9 @@ export default function Moon() {
       active = false;
       cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("scroll", schedule);
+      visibilityObserver.disconnect();
+      document.removeEventListener("visibilitychange", visibilityChanged);
+      window.removeEventListener("scroll", invalidate);
       window.removeEventListener("resize", measure);
       motionPreference.removeEventListener("change", measure);
       surface.removeEventListener("webglcontextlost", contextLost);

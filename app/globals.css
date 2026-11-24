@@ -67,7 +67,7 @@ h1 > em { display: block; margin-left: .29em; font-weight: 400; }
 .moon-surface { z-index: 1; opacity: 0; }
 .moon-surface[data-renderer="webgl"] { opacity: 1; }
 .moon-surface[data-renderer="webgl"] + .moon-fallback { opacity: 0; }
-.moon-fallback { inset: 1.25%; width: 97.5%; height: 97.5%; border-radius: 50%; overflow: hidden; background: url("/moon/lroc-color-2k.jpg") center / 200% 100%; box-shadow: inset -10px -12px 30px #0008; }
+.moon-fallback { inset: 1.25%; width: 97.5%; height: 97.5%; border-radius: 50%; overflow: hidden; background: url("/moon/lroc-color-2k.jpg") var(--moon-texture-position, 50%) center / 200% 100%; box-shadow: inset -10px -12px 30px #0008; }
 .moon-fallback::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: #10120f; transform: translateX(25%); opacity: var(--moon-progress, 0); }
 .atlas-caption { text-align: center; font-size: .6875rem; line-height: 1.7; color: #8e967f; letter-spacing: .04em; margin-top: -.5rem; }
 .atlas-caption span, .atlas-caption em { display: block; }
