@@ -18,7 +18,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-The build downloads Inter and Cormorant Garamond through `next/font/google` and requires access to Google Fonts.
+Inter and Cormorant Garamond are bundled in `app/fonts/` and loaded through `next/font/local`. Builds do not fetch Google Fonts. Font sources and licenses are included alongside the files.
 
 ## Content
 
