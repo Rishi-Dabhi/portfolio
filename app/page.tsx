@@ -1,652 +1,121 @@
 ﻿"use client";
 
-import Link from "next/link";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useMotionTemplate,
-} from "framer-motion";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import StarryBackground from "@/components/StarryBackground";
+import StarryBackground, { CelestialBackground } from "@/components/StarryBackground";
+import { experience, projects } from "@/components/portfolio-data";
 
-/* ─── Data ───────────────────────────────── */
-
-const skills = [
-  "Python", "C++", "C", "Java", "JavaScript", "TypeScript",
-  "Rust", "React", "Next.js", "Django", "FastAPI", "Spring Boot",
-  "TensorFlow", "PyTorch", "scikit-learn", "Docker",
-  "PostgreSQL", "MongoDB", "Neo4j", "Azure", "Git", "CI/CD",
-  "Agile Methodologies", "FPGA", "Agentic AI", "LangGraph",
+const socials = [
+  { name: "GitHub", href: "https://github.com/Rishi-Dabhi" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/rishi-dabhi-9099b0199/" },
+  { name: "LeetCode", href: "https://leetcode.com/u/TarnishedSoul/" },
+];
+const skillGroups = [
+  { title: "The languages", skills: "Python, C++, C, Java, JavaScript, TypeScript, Rust" },
+  { title: "The applications", skills: "React, Next.js, Django, FastAPI, Spring Boot" },
+  { title: "The intelligence", skills: "TensorFlow, PyTorch, scikit-learn, Agentic AI, LangGraph" },
+  { title: "The foundations", skills: "PostgreSQL, MongoDB, Neo4j, Docker, Azure, Git, CI/CD, FPGA, Agile methodologies" },
 ];
 
-const skillsRow1 = skills.slice(0, Math.ceil(skills.length / 2));
-const skillsRow2 = skills.slice(Math.ceil(skills.length / 2));
+function StarMark({ className = "" }: { className?: string }) {
+  return <svg className={`star-mark ${className}`} viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="m16 0 3.4 12.6L32 16l-12.6 3.4L16 32l-3.4-12.6L0 16l12.6-3.4Z" fill="currentColor" /></svg>;
+}
 
-const shredParticles = [
-  { w: 4, h: 14, delay: 0, dur: 1.5, y: 8, rot: 45 },
-  { w: 3, h: 10, delay: 0.22, dur: 1.8, y: 16, rot: -30 },
-  { w: 5, h: 18, delay: 0.44, dur: 1.3, y: 25, rot: 60 },
-  { w: 2, h: 8, delay: 0.66, dur: 2.0, y: 33, rot: -75 },
-  { w: 6, h: 12, delay: 0.88, dur: 1.4, y: 42, rot: 20 },
-  { w: 3, h: 16, delay: 1.1, dur: 1.7, y: 50, rot: -50 },
-  { w: 4, h: 11, delay: 1.32, dur: 1.6, y: 58, rot: 80 },
-  { w: 5, h: 20, delay: 1.54, dur: 1.2, y: 67, rot: -15 },
-  { w: 2, h: 9, delay: 1.76, dur: 1.9, y: 75, rot: 55 },
-  { w: 7, h: 13, delay: 1.98, dur: 1.5, y: 83, rot: -40 },
-  { w: 3, h: 15, delay: 2.2, dur: 1.3, y: 90, rot: 70 },
-  { w: 4, h: 10, delay: 2.42, dur: 1.6, y: 95, rot: -65 },
-];
-
-const projects = [
-  {
-    title: "RentRadar",
-    stack: ["FastAPI", "LangGraph", "Next.js"],
-    summary:
-      "AI-powered property valuation with market insights, sustainability metrics, and geospatial heatmaps.",
-  },
-  {
-    title: "MultiMind AI",
-    stack: ["React", "FastAPI", "Neo4j", "Stripe"],
-    summary:
-      "Multi-LLM platform with council workflow, graph persistence, secure auth, and subscriptions.",
-  },
-  {
-    title: "E-Commerce Platform",
-    stack: ["Spring Boot", "React", "PostgreSQL"],
-    summary:
-      "Full-stack commerce app with manager dashboard, secure CRUD workflows, and checkout flow.",
-  },
-  {
-    title: "CMS Automation Testing",
-    stack: ["Python", "Docker", "CI/CD"],
-    summary:
-      "Automated validation for 200+ FPGA boards; reduced test duration by 40%.",
-  },
-  {
-    title: "Remote Motion Tracking",
-    stack: ["Python", "Raspberry Pi", "UDP/TCP"],
-    summary:
-      "Distributed motion-tracking system with remote capture and networked processing.",
-  },
-  {
-    title: "TrustIt-AI",
-    stack: ["FastAPI", "React", "Agentic AI"],
-    summary:
-      "Fact-checking agent system with automated query generation and cross-reference analysis.",
-  },
-  {
-    title: "Skin Disease Classifier",
-    stack: ["TensorFlow", "Vue.js", "Flask"],
-    summary:
-      "CNN-based skin-disease classification system with a Vue.js frontend and Flask backend.",
-  },
-  {
-    title: "AI Calorie Tracker",
-    stack: ["Next.js", "TypeScript", "MongoDB", "LLaVA"],
-    summary:
-      "AI-powered calorie-tracking web app using Hugging Face’s LLaVA vision-language model.",
-  },
-  {
-    title: "Multiplayer Chess",
-    stack: ["React", "FastAPI", "WebSockets"],
-    summary:
-      "Real-time multiplayer chess with WebSocket sync, legal move validation, and multi-room support.",
-  },
-  {
-    title: "Banking & Marketing Software",
-    stack: ["Java", "Swing", "OOP"],
-    summary:
-      "GUI-based banking and marketing system with customer onboarding, account management, and integrated payments.",
-  },
-  {
-    title: "Oven Control System",
-    stack: ["C", "PIC16F1937", "MPLAB"],
-    summary:
-      "Microcontroller-based oven control with temperature sensing, door detection, keypad/LCD interface, and sensor integration.",
-  },
-  {
-    title: "Project Retriever",
-    stack: ["Arduino", "mBlock", "Robotics"],
-    summary:
-      "Fully autonomous robot that detects, picks up, and retrieves objects within a defined area using Makeblock kit.",
-  },
-];
-
-const experience = [
-  {
-    role: "Software Engineer",
-    company: "CERN",
-    period: "Jul 2024 — Sep 2024",
-    bullets: [
-      "Built ANN pipeline (TensorFlow/Keras) with 93% accuracy in 5-class jet classification.",
-      "Optimized FPGA deployment using HLS4ML and reduced resource usage by 30%.",
-      "Automated validation for 200+ FPGA boards; reduced test duration by 40%.",
-    ],
-  },
-  {
-    role: "Software Engineering Intern",
-    company: "Johnson Controls",
-    period: "Jul 2023 — Jun 2024",
-    bullets: [
-      "Developed performance-critical C++ software with Jenkins-based CI workflows.",
-      "Built Python network analysis tooling that reduced manual log review by ~70%.",
-    ],
-  },
-  {
-    role: "Summer Research Intern",
-    company: "Brunel University London",
-    period: "Jun 2022 — Sept 2022",
-    bullets: [
-      "Developed an ML pipeline to process and analyze a large text corpus for emotion prediction and \
-      topic modelling using NLTK, LDA and clustering.",
-      "Implemented an emotion prediction model achieving 86% accuracy.",
-    ],
-  }
-];
-
-/* ─── Animation helpers ──────────────────── */
-
-const fadeUp = {
-  initial: { opacity: 0, y: 28 } as const,
-  whileInView: { opacity: 1, y: 0 } as const,
-  viewport: { once: true, amount: 0.2 } as const,
-  transition: { duration: 0.55, ease: "easeOut" as const },
-};
-
-/* ─── Spotlight Card ─────────────────────── */
-
-function ProjectCard({
-  number,
-  title,
-  stack,
-  summary,
-  index,
-}: {
-  number: string;
-  title: string;
-  stack: string[];
-  summary: string;
-  index: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const rawRx = useMotionValue(0);
-  const rawRy = useMotionValue(0);
-  const rx = useSpring(rawRx, { stiffness: 180, damping: 22 });
-  const ry = useSpring(rawRy, { stiffness: 180, damping: 22 });
-
-  function onMove(e: React.MouseEvent) {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    rawRx.set(-(y - rect.height / 2) / 20);
-    rawRy.set((x - rect.width / 2) / 20);
-    mouseX.set(x);
-    mouseY.set(y);
-  }
-
-  function onLeave() {
-    rawRx.set(0);
-    rawRy.set(0);
-  }
-
-  const spotlight = useMotionTemplate`radial-gradient(
-    300px circle at ${mouseX}px ${mouseY}px,
-    rgba(30, 232, 135, 0.06),
-    transparent 80%
-  )`;
-
-  return (
-    <motion.article
-      ref={ref}
-      className="project-card"
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      style={{
-        rotateX: rx,
-        rotateY: ry,
-        transformStyle: "preserve-3d",
-        transformPerspective: 800,
-      }}
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.12 }}
-      transition={{ duration: 0.5, delay: index * 0.07 }}
-    >
-      <motion.div className="project-spotlight" style={{ background: spotlight }} />
-      <div style={{ position: "relative", zIndex: 2 }}>
-        <span className="project-number">{number}</span>
-        <h3 className="project-title">{title}</h3>
-        <div className="project-stack">
-          {stack.map((tag) => (
-            <span key={tag} className="project-tag">{tag}</span>
-          ))}
-        </div>
-        <p className="project-summary">{summary}</p>
+function ProjectArtwork({ type }: { type: "property" | "intelligence" | "commerce" }) {
+  if (type === "property") {
+    return (
+      <div className="project-art property-art" aria-hidden="true">
+        <svg viewBox="0 0 800 520" fill="none" className="contour-map">
+          <g stroke="currentColor" strokeWidth=".7">{Array.from({ length: 14 }, (_, i) => <path key={i} d={`M${-80 + i * 5} ${50 + i * 34}C130 ${-140 + i * 29},250 ${270 + i * 18},410 ${140 + i * 16}S600 ${-30 + i * 32},900 ${100 + i * 30}`} />)}</g>
+          <g stroke="currentColor" opacity=".6"><path d="M260 130 502 230 450 391 210 280Z" /><path d="m260 130 80 201m162-101-275-11" /></g>
+          <circle cx="383" cy="260" r="92" stroke="currentColor" strokeDasharray="3 8" /><circle cx="383" cy="260" r="48" stroke="currentColor" />
+          <circle cx="383" cy="260" r="8" fill="currentColor" /><path d="M383 238v-30m0 104v-30m-22-22h-30m104 0h-30" stroke="currentColor" />
+        </svg>
+        <div className="art-masthead"><span>RentRadar</span><span>Property intelligence</span></div>
+        <span className="art-large-type">A clearer<br /><em>view.</em></span>
+        <span className="art-footnote">Market insights · Geospatial analysis</span>
+        <div className="map-coordinate"><span>Location</span><strong>meets intelligence.</strong></div>
       </div>
-    </motion.article>
+    );
+  }
+  if (type === "intelligence") {
+    return (
+      <div className="project-art intelligence-art" aria-hidden="true">
+        <div className="art-masthead"><span>MultiMind</span><span>Artificial intelligence</span></div>
+        <svg viewBox="0 0 560 420" fill="none" className="mind-art">
+          <g stroke="currentColor" strokeWidth=".7">{[0,30,60,90,120,150].map(angle => <ellipse key={angle} cx="280" cy="205" rx="132" ry="50" transform={`rotate(${angle} 280 205)`} />)}</g>
+          <circle cx="280" cy="205" r="5" fill="currentColor" /><circle cx="280" cy="205" r="157" stroke="currentColor" strokeWidth=".5" strokeDasharray="1 10" />
+        </svg>
+        <span className="mind-art-caption">Different minds.<br /><em>A shared perspective.</em></span>
+        <span className="art-footnote">Council workflows · Connected knowledge</span>
+      </div>
+    );
+  }
+  return (
+    <div className="project-art commerce-art" aria-hidden="true">
+      <div className="art-masthead"><span>The commerce project</span><span>Full-stack development</span></div>
+      <div className="commerce-composition"><span className="composition-line" /><span className="sculpture sculpture-one" /><span className="sculpture sculpture-two" /><span className="sculpture sculpture-three" /></div>
+      <span className="commerce-art-caption">Considered.<br /><em>Connected.</em></span>
+      <span className="art-footnote">From the first browse to the final checkout.</span>
+    </div>
   );
 }
 
-/* ─── Page ───────────────────────────────── */
-
-const INITIAL_PROJECTS = 6;
-const LOAD_STEP = 3;
-
 export default function Home() {
-  const [visibleCount, setVisibleCount] = useState(INITIAL_PROJECTS);
-
-  const showMore = () =>
-    setVisibleCount((c) => Math.min(c + LOAD_STEP, projects.length));
-  const showLess = () => setVisibleCount(INITIAL_PROJECTS);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <>
-      {/* Galaxy background */}
-      <StarryBackground />
-
+      <CelestialBackground />
+      <a className="skip-link" href="#main">Skip to content</a>
       <Navbar />
-
-      <main>
-        {/* ─── Hero ──────────────────────── */}
-        <section className="hero" id="home">
-          <div className="container">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <p className="hero-label">
-                <span className="pulse-dot" />
-                Software Engineer
-              </p>
-            </motion.div>
-
-            <motion.h1
-              className="hero-name"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.08 }}
-            >
-              Hi, I'm Rishi Dabhi ...
-            </motion.h1>
-
-            <motion.p
-              className="hero-description"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.18 }}
-            >
-              Software Engineer with industry experience at{" "}
-              <strong style={{ color: "var(--text)", fontWeight: 600 }}>CERN</strong>{" "}
-              and{" "}
-              <strong style={{ color: "var(--text)", fontWeight: 600 }}>
-                Johnson Controls
-              </strong>
-              , building production-grade full-stack, Agentic AI and ML systems.
-            </motion.p>
-
-            <motion.div
-              className="hero-cta"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <a href="#projects" className="btn btn-primary">
-                View Projects ↓
-              </a>
-              <Link
-                href="https://github.com/Rishi-Dabhi"
-                className="btn btn-secondary"
-                target="_blank"
-              >
-                GitHub ↗
-              </Link>
-              <Link
-                href="https://www.linkedin.com/in/rishi-dabhi-9099b0199/"
-                className="btn btn-secondary"
-                target="_blank"
-              >
-                LinkedIn ↗
-              </Link>
-              <Link
-                href="https://leetcode.com/u/TarnishedSoul/"
-                className="btn btn-secondary"
-                target="_blank"
-              >
-                LeetCode ↗
-              </Link>
-            </motion.div>
-
-            <div className="scroll-hint">
-              <span>Scroll</span>
-              <div className="scroll-hint-line" />
-            </div>
+      <main id="main">
+        <section className="hero container" id="home" aria-labelledby="hero-heading">
+          <div className="hero-copy">
+            <p className="eyebrow"><span className="eyebrow-rule" /> Software engineer & curious mind</p>
+            <h1 id="hero-heading"><span>Rishi</span><em>Dabhi<span className="name-period">.</span></em></h1>
+            <div className="hero-description"><p>Finding the connections.<br />Building what comes next.</p><p>Graduate Software Engineer at <strong>Sage.</strong><br />Previously CERN & Johnson Controls.</p></div>
+            <a href="#projects" className="work-link"><span className="link-orbit"><StarMark /></span><span>Discover my work</span></a>
           </div>
+          <div className="hero-art"><StarryBackground /><p className="atlas-caption"><span>A fascination with the celestial.</span><em>A practice rooted in engineering.</em></p></div>
+          <div className="hero-bottom"><span>Full-stack development &nbsp; / &nbsp; AI & machine learning</span><a href="#about">A little more about me</a></div>
         </section>
 
-        {/* ─── About ─────────────────────── */}
-        <section className="section" id="about">
-          <div className="container">
-            <motion.div className="section-header" {...fadeUp}>
-              <span className="section-number">01</span>
-              <h2 className="section-title">About</h2>
-            </motion.div>
+        <div className="career-strip"><div className="container career-strip-inner"><span className="strip-label">A few places<br />along the way</span><span className="company-sage">Sage<small>The current chapter</small></span><span className="company-cern">CERN</span><span className="company-johnson">Johnson Controls</span><span className="company-brunel">Brunel University<br /><em>London</em></span></div></div>
 
-            <motion.p className="about-text" {...fadeUp}>
-              I&apos;m a <strong>Graduate Computer Systems Engineer</strong> with
-              a First-Class Honours degree from Brunel University London. I
-              specialize in building <strong>AI-powered applications</strong>,
-              scalable backend systems, and intuitive full-stack experiences -
-              from neural networks deployed on FPGAs to production-ready web
-              platforms.
-            </motion.p>
-
-            <div className="about-stats">
-              {[
-                { value: "1st Class", label: "Brunel University" },
-                { value: "CERN", label: "Research Institute" },
-                { value: "Johnson Controls", label: "HVAC" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  className="stat-card"
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: i * 0.1 }}
-                >
-                  <div className="stat-value">{stat.value}</div>
-                  <div className="stat-label">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+        <section className="section container" id="projects" aria-labelledby="projects-heading">
+          <div className="section-heading"><div><p className="eyebrow">Selected explorations</p><h2 id="projects-heading">Things I’ve<br /><em>put into the world.</em></h2></div><p>A collection of applications, experiments,<br />and problems worth spending time on.</p></div>
+          <article className="project-feature">
+            <ProjectArtwork type="property" />
+            <div className="project-detail"><div><span className="project-category">AI & property technology</span><h3>RentRadar</h3><p>{projects[0].summary}</p></div><ul className="tags" aria-label="Technologies">{projects[0].stack.map(tag => <li key={tag}>{tag}</li>)}</ul></div>
+          </article>
+          <div className="project-pair">{projects.slice(1, 3).map((project, index) => (
+            <article className="project-secondary" key={project.title}>
+              <ProjectArtwork type={index === 0 ? "intelligence" : "commerce"} />
+              <div className="project-detail"><span className="project-category">{index === 0 ? "Multi-model AI platform" : "End-to-end web application"}</span><h3>{project.title}</h3><p>{project.summary}</p><ul className="tags" aria-label="Technologies">{project.stack.map(tag => <li key={tag}>{tag}</li>)}</ul></div>
+            </article>
+          ))}</div>
+          <div id="project-archive" className="project-archive" hidden={!expanded}>{projects.slice(3).map(project => <article className="archive-row" key={project.title}><h3>{project.title}</h3><div><p>{project.summary}</p><ul className="tags" aria-label="Technologies">{project.stack.map(tag => <li key={tag}>{tag}</li>)}</ul></div></article>)}</div>
+          <div className="archive-toggle"><span>There’s more in the notebook.</span><button type="button" aria-expanded={expanded} aria-controls="project-archive" onClick={() => setExpanded(!expanded)}>{expanded ? "Close the archive" : `Open the project archive (${projects.length})`}<span aria-hidden="true">{expanded ? "−" : "+"}</span></button></div>
         </section>
 
-        <hr className="section-divider" />
-
-        {/* ─── Skills ────────────────────── */}
-        <section className="section" id="skills">
-          <div className="container">
-            <motion.div className="section-header" {...fadeUp}>
-              <span className="section-number">02</span>
-              <h2 className="section-title">Tech Stack</h2>
-              <p className="section-subtitle">
-                Languages, frameworks, and tools I work with daily.
-              </p>
-            </motion.div>
+        <section className="experience-section" id="experience" aria-labelledby="experience-heading"><div className="container experience-layout">
+          <div className="experience-intro"><p className="eyebrow">The path so far</p><h2 id="experience-heading">Every chapter,<br /><em>something learned.</em></h2><p>Research labs, engineering teams, and a new beginning at Sage.</p><div className="chapter-ornament" aria-hidden="true"><span /><StarMark /><span /></div></div>
+          <div className="experience-list">
+            <article className="experience-item current-role"><div className="experience-meta"><span className="current-label">The current chapter</span><span>Present</span></div><p className="experience-company">Sage</p><h3>Graduate Software Engineer</h3><p className="role-description">Continuing my journey in software engineering.</p></article>
+            {experience.map(job => <article className="experience-item" key={job.company}><div className="experience-meta"><span>{job.company}</span><span>{job.period}</span></div><h3>{job.role}</h3><ul className="experience-bullets">{job.bullets.map(bullet => <li key={bullet}>{bullet}</li>)}</ul></article>)}
           </div>
+        </div></section>
 
-          {/* Full-width marquee area */}
-          <div className="marquee-container">
-            {/* Shred particles — left edge */}
-            <div className="shred-edge shred-edge--left">
-              {shredParticles.map((p, i) => (
-                <div
-                  key={i}
-                  className="shred-particle shred-left"
-                  style={
-                    {
-                      "--w": `${p.w}px`,
-                      "--h": `${p.h}px`,
-                      "--delay": `${p.delay}s`,
-                      "--dur": `${p.dur}s`,
-                      "--y": `${p.y}%`,
-                      "--rot": `${p.rot}deg`,
-                    } as React.CSSProperties
-                  }
-                />
-              ))}
-            </div>
-
-            {/* Shred particles — right edge */}
-            <div className="shred-edge shred-edge--right">
-              {shredParticles.map((p, i) => (
-                <div
-                  key={i}
-                  className="shred-particle shred-right"
-                  style={
-                    {
-                      "--w": `${p.w}px`,
-                      "--h": `${p.h}px`,
-                      "--delay": `${p.delay + 0.1}s`,
-                      "--dur": `${p.dur}s`,
-                      "--y": `${p.y}%`,
-                      "--rot": `${-p.rot}deg`,
-                    } as React.CSSProperties
-                  }
-                />
-              ))}
-            </div>
-
-            {/* Row 1 — scrolls left */}
-            <div className="marquee-row">
-              <div className="marquee-track marquee-forward">
-                {[...skillsRow1, ...skillsRow1, ...skillsRow1].map(
-                  (skill, i) => (
-                    <span key={`a-${i}`} className="skill-chip">
-                      {skill}
-                    </span>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* Row 2 — scrolls right */}
-            <div className="marquee-row">
-              <div className="marquee-track marquee-reverse">
-                {[...skillsRow2, ...skillsRow2, ...skillsRow2].map(
-                  (skill, i) => (
-                    <span key={`b-${i}`} className="skill-chip">
-                      {skill}
-                    </span>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
+        <section className="section container about-layout" id="about" aria-labelledby="about-heading">
+          <div className="about-heading"><p className="eyebrow">Beyond the code</p><h2 id="about-heading">A little<br /><em>closer to home.</em></h2><div className="about-seal" aria-hidden="true"><StarMark /><span>Always a student<br />of something.</span></div></div>
+          <div className="about-body"><p className="about-lead">I like understanding how things work.<br /><em>Then seeing what else they could become.</em></p><p>I’m Rishi, a Graduate Software Engineer at Sage and a First-Class Computer Systems Engineering graduate from Brunel University London.</p><p>My work has taken me from neural networks on FPGAs at CERN to full-stack applications and agentic AI. Outside those systems, I’m drawn to the celestial: the stars, the patterns, and the sense that there’s always more to understand.</p><div className="education" id="education"><span className="education-label">Education</span><div><h3>BEng. Computer System Engineering</h3><p>Brunel University London · 2021–2025</p><span>First Class Honours</span></div></div></div>
+          <div className="toolkit" id="skills"><div className="toolkit-heading"><p className="eyebrow">Tools of the trade</p><p>The things I build with.</p></div><div className="toolkit-grid">{skillGroups.map(group => <div className="skill-group" key={group.title}><h3>{group.title}</h3><p>{group.skills}</p></div>)}</div></div>
         </section>
 
-        <hr className="section-divider" />
-
-        {/* ─── Experience ────────────────── */}
-        <section className="section" id="experience">
-          <div className="container">
-            <motion.div className="section-header" {...fadeUp}>
-              <span className="section-number">03</span>
-              <h2 className="section-title">Experience</h2>
-            </motion.div>
-
-            <div className="experience-list">
-              {experience.map((job, i) => (
-                <motion.article
-                  key={job.company}
-                  className="experience-card"
-                  initial={{ opacity: 0, x: -24 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.5, delay: i * 0.12 }}
-                >
-                  <div className="exp-header">
-                    <div>
-                      <h3 className="exp-role">{job.role}</h3>
-                      <span className="exp-company">{job.company}</span>
-                    </div>
-                    <span className="exp-period">{job.period}</span>
-                  </div>
-                  <ul className="exp-bullets">
-                    {job.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                </motion.article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <hr className="section-divider" />
-
-        {/* ─── Education ─────────────────── */}
-        <section className="section" id="education">
-          <div className="container">
-            <motion.div className="section-header" {...fadeUp}>
-              <span className="section-number">04</span>
-              <h2 className="section-title">Education</h2>
-            </motion.div>
-
-            <motion.article
-              className="education-card"
-              initial={{ opacity: 0, x: -24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3 className="edu-degree">
-                BEng. (Honours) Computer System Engineering
-              </h3>
-              <p className="edu-school">Brunel University London</p>
-              <div className="edu-meta">
-                <span className="edu-badge">First Class Honours</span>
-                <span className="edu-period">Sept 2021 — June 2025</span>
-              </div>
-            </motion.article>
-          </div>
-        </section>
-
-        <hr className="section-divider" />
-
-        {/* ─── Projects ──────────────────── */}
-        <section className="section" id="projects">
-          <div className="container">
-            <motion.div className="section-header" {...fadeUp}>
-              <span className="section-number">05</span>
-              <h2 className="section-title">Projects</h2>
-              <p className="section-subtitle">
-                A selection of things I&apos;ve built.
-              </p>
-            </motion.div>
-
-            <div className="projects-grid">
-              {projects.slice(0, visibleCount).map((project, i) => (
-                <ProjectCard
-                  key={project.title}
-                  number={String(i + 1).padStart(2, "0")}
-                  title={project.title}
-                  stack={project.stack}
-                  summary={project.summary}
-                  index={i}
-                />
-              ))}
-            </div>
-
-            <div className="projects-actions">
-              {visibleCount < projects.length && (
-                <motion.button
-                  className="btn btn-primary"
-                  onClick={showMore}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Load More
-                </motion.button>
-              )}
-              {visibleCount > INITIAL_PROJECTS && (
-                <motion.button
-                  className="btn btn-secondary"
-                  onClick={showLess}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Show Less
-                </motion.button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── Contact ───────────────────── */}
-        <section className="contact-section" id="contact">
-          <div className="container">
-            <motion.h2
-              className="contact-heading"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55 }}
-            >
-              Let&apos;s build something{" "}
-              <span className="gradient-text">together</span>
-            </motion.h2>
-
-            <motion.p
-              className="contact-description"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.08 }}
-            >
-              Open to full-time software engineering roles and select contract
-              work. Let&apos;s talk.
-            </motion.p>
-
-            <motion.div
-              className="contact-cta"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.16 }}
-            >
-              <Link href="mailto:rishi4636@gmail.com" className="btn btn-primary">
-                Get in Touch →
-              </Link>
-              <Link
-                href="https://www.linkedin.com/in/rishi-dabhi-9099b0199/"
-                className="btn btn-secondary"
-                target="_blank"
-              >
-                LinkedIn ↗
-              </Link>
-            </motion.div>
-          </div>
-        </section>
+        <section className="contact-section" id="contact" aria-labelledby="contact-heading"><div className="container"><div className="contact-top"><p className="eyebrow">Our paths might cross</p><StarMark /></div><h2 id="contact-heading">Something<br /><em>on your mind?</em></h2><div className="contact-bottom"><p>A project, a question, or a conversation<br />about something interesting.</p><a className="contact-email" href="mailto:rishi4636@gmail.com">Let’s talk<span className="email-underline" /></a></div><a className="email-address" href="mailto:rishi4636@gmail.com">rishi4636@gmail.com</a></div></section>
       </main>
-
-      {/* ─── Footer ──────────────────────── */}
-      <footer className="footer">
-        <div className="container">
-          <div className="footer-inner">
-            <p className="footer-text">
-              © {new Date().getFullYear()} Rishi Dabhi
-            </p>
-            <ul className="footer-links">
-              <li>
-                <Link href="https://github.com/Rishi-Dabhi" className="footer-link" target="_blank">
-                  GitHub
-                </Link>
-              </li>
-              <li>
-                <Link href="https://www.linkedin.com/in/rishi-dabhi-9099b0199/" className="footer-link" target="_blank">
-                  LinkedIn
-                </Link>
-              </li>
-              <li>
-                <Link href="mailto:rishi4636@gmail.com" className="footer-link">
-                  Email
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      <footer className="container footer"><a href="#home" className="footer-brand">Rishi <em>Dabhi.</em></a><span>A small corner of the internet.</span><ul>{socials.map(social => <li key={social.name}><a href={social.href} target="_blank" rel="noopener noreferrer">{social.name}</a></li>)}</ul><div className="footer-bottom"><span>© {new Date().getFullYear()} Rishi Dabhi</span><a href="#home">Back to the beginning</a><span>Moon imagery: <a href="https://svs.gsfc.nasa.gov/4720/" target="_blank" rel="noopener noreferrer">NASA SVS</a></span></div></footer>
     </>
   );
 }

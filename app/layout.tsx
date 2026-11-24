@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,10 +8,18 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+const editorial = Cormorant_Garamond({
+  variable: "--font-editorial",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Rishi Dabhi | Software Engineer",
+  title: "Rishi Dabhi | Graduate Software Engineer at Sage",
   description:
-    "Software engineer with experience at CERN and Johnson Controls, building backend, full-stack, and AI systems.",
+    "Rishi Dabhi, Graduate Software Engineer at Sage. Previously at CERN and Johnson Controls. Exploring full-stack development, AI, and intelligent systems.",
 };
 
 export default function RootLayout({
@@ -20,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+    <html lang="en" className={`${inter.variable} ${editorial.variable}`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

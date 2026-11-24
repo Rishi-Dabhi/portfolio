@@ -1,48 +1,30 @@
-"use client";
+﻿"use client";
 
 import { useRef, useState } from "react";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
-const navItems = [
-  { href: "#about", label: "About" },
-  { href: "#skills", label: "Skills" },
+const links = [
+  { href: "#projects", label: "Selected work" },
   { href: "#experience", label: "Experience" },
-  { href: "#projects", label: "Projects" },
-  { href: "#contact", label: "Contact" },
+  { href: "#about", label: "About" },
 ];
 
 export default function Navbar() {
-  const { scrollY } = useScroll();
-  const [hidden, setHidden] = useState(false);
-  const lastY = useRef(0);
+  const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setHidden(latest > lastY.current && latest > 120);
-    lastY.current = latest;
-  });
+  function closeMenu() { setOpen(false); }
 
   return (
-    <motion.nav
-      className="navbar"
-      animate={hidden ? "hidden" : "visible"}
-      variants={{
-        visible: { y: 0, opacity: 1 },
-        hidden: { y: "-140%", opacity: 0 },
-      }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-    >
-      <a href="#" className="nav-brand">
-        RD
-      </a>
-      <ul className="nav-links">
-        {navItems.map((item) => (
-          <li key={item.href}>
-            <a href={item.href} className="nav-link">
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </motion.nav>
+    <header className="site-header">
+      <nav className="container navbar" aria-label="Main navigation" onKeyDown={event => {
+        if (event.key === "Escape" && open) { closeMenu(); menuButton.current?.focus(); }
+      }}>
+        <a href="#home" className="nav-brand" aria-label="Rishi Dabhi, home" onClick={closeMenu}>rd<span>.</span></a>
+        <span className="nav-note">A personal portfolio</span>
+        <button ref={menuButton} type="button" className="menu-toggle" aria-expanded={open} aria-controls="navigation-links" onClick={() => setOpen(!open)}>{open ? "Close" : "Menu"}<span aria-hidden="true">{open ? "−" : "+"}</span></button>
+        <ul id="navigation-links" className={`nav-links${open ? " is-open" : ""}`}>{links.map(link => <li key={link.href}><a href={link.href} onClick={closeMenu}>{link.label}</a></li>)}<li className="mobile-contact"><a href="#contact" onClick={closeMenu}>Get in touch</a></li></ul>
+        <a className="nav-contact" href="#contact">Get in touch<span className="contact-mark" aria-hidden="true" /></a>
+      </nav>
+    </header>
   );
 }
