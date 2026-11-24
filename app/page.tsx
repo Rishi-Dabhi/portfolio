@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import Galaxy from "@/components/Galaxy";
 import StarryBackground, { CelestialBackground } from "@/components/StarryBackground";
 import { experience, projects } from "@/components/portfolio-data";
 
@@ -82,6 +83,8 @@ export default function Home() {
         </section>
 
         <div className="career-strip"><div className="container career-strip-inner"><span className="strip-label">A few places<br />along the way</span><span className="company-sage">Sage<small>The current chapter</small></span><span className="company-cern">CERN</span><span className="company-johnson">Johnson Controls</span><span className="company-brunel">Brunel University<br /><em>London</em></span></div></div>
+
+        <Galaxy />
 
         <section className="section container" id="projects" aria-labelledby="projects-heading">
           <div className="section-heading"><div><p className="eyebrow">Selected explorations</p><h2 id="projects-heading">Things I’ve<br /><em>put into the world.</em></h2></div><p>A collection of applications, experiments,<br />and problems worth spending time on.</p></div>
