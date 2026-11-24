@@ -63,6 +63,7 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
     powerPreference: "low-power",
   });
   if (!gl) return null;
+  const anisotropy = gl.getExtension("EXT_texture_filter_anisotropic");
 
   const shaders: WebGLShader[] = [];
   const textures: WebGLTexture[] = [];
@@ -115,7 +116,8 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
       lastProgress = progress;
       lastRotation = rotation;
       if (disposed || loaded !== 2 || !program || gl!.isContextLost()) return;
-      const resolution = Math.min(1024, Math.max(128, Math.round(canvas.clientWidth * Math.min(window.devicePixelRatio || 1, 2))));
+      // Match high-density displays instead of stretching a lower-resolution disc.
+      const resolution = Math.min(1536, Math.max(128, Math.round(canvas.clientWidth * Math.min(window.devicePixelRatio || 1, 3))));
       const resized = canvas.width !== resolution || canvas.height !== resolution;
       if (!resized && lastDrawn === progress && lastDrawnRotation === rotation) return;
       if (resized) {
@@ -134,7 +136,10 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
       canvas.dataset.renderer = "webgl";
     }
 
-    ["/moon/lroc-color-2k.jpg", "/moon/lola-height-1k.jpg"].forEach((source, unit) => {
+    const colorMap = gl.getParameter(gl.MAX_TEXTURE_SIZE) >= 4096
+      ? "/moon/lroc-color-4k.jpg"
+      : "/moon/lroc-color-2k.jpg";
+    [colorMap, "/moon/lola-height-1k.jpg"].forEach((source, unit) => {
       const texture = gl.createTexture();
       if (!texture) throw new Error("Moon texture unavailable");
       textures.push(texture);
@@ -150,6 +155,11 @@ function createRenderer(canvas: HTMLCanvasElement): MoonRenderer | null {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        // Keep oblique surface detail clear near the curved edge of the Moon.
+        if (anisotropy) {
+          gl.texParameterf(gl.TEXTURE_2D, anisotropy.TEXTURE_MAX_ANISOTROPY_EXT,
+            Math.min(8, gl.getParameter(anisotropy.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+        }
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.useProgram(program);
         gl.uniform1i(gl.getUniformLocation(program, unit === 0 ? "u_color" : "u_height"), unit);
